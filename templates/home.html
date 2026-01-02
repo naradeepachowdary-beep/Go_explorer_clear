@@ -1,0 +1,621 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-gradient py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 400px;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-12 text-center text-white">
+                <h1 class="display-4 fw-bold mb-3">Explore India with GoExplorer</h1>
+                <p class="lead mb-4">Book Hotels, Buses & Holiday Packages - All in One Place</p>
+            </div>
+        </div>
+        
+        <!-- Search Tabs -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-lg-10">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-4">
+                        <ul class="nav nav-pills mb-4" id="searchTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="hotels-tab" data-bs-toggle="pill" data-bs-target="#hotels" type="button">
+                                    <i class="fas fa-hotel"></i> Hotels
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="buses-tab" data-bs-toggle="pill" data-bs-target="#buses" type="button">
+                                    <i class="fas fa-bus"></i> Buses
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="packages-tab" data-bs-toggle="pill" data-bs-target="#packages" type="button">
+                                    <i class="fas fa-suitcase-rolling"></i> Packages
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="searchTabContent">
+                            <!-- Hotel Search -->
+                            <div class="tab-pane fade show active" id="hotels" role="tabpanel">
+                                <form id="hotelSearchForm" onsubmit="return validateHotelSearch(event)">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">City <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="hotelCity" name="city" required>
+                                                <option value="">Select City</option>
+                                                {% for city in popular_cities %}
+                                                <option value="{{ city.id }}">{{ city.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div id="hotelCityError" class="text-danger small mt-1" style="display: none;"></div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Check-in <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control" id="hotelCheckin" name="checkin" required>
+                                            <div id="hotelCheckinError" class="text-danger small mt-1" style="display: none;"></div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Check-out <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control" id="hotelCheckout" name="checkout" required>
+                                            <div id="hotelCheckoutError" class="text-danger small mt-1" style="display: none;"></div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-search"></i> Search Hotels
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Bus Search -->
+                            <div class="tab-pane fade" id="buses" role="tabpanel">
+                                <form id="busSearchForm" onsubmit="return searchBuses(event)">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">From <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="busSource" name="source" required>
+                                                <option value="">Select City</option>
+                                                {% for city in popular_cities %}
+                                                <option value="{{ city.id }}">{{ city.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div id="busSourceError" class="text-danger small mt-1" style="display: none;"></div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">To <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="busDestination" name="destination" required>
+                                                <option value="">Select City</option>
+                                                {% for city in popular_cities %}
+                                                <option value="{{ city.id }}">{{ city.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div id="busDestError" class="text-danger small mt-1" style="display: none;"></div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Journey Date <span class="text-danger">*</span></label>
+                                            <input type="date" id="busDate" class="form-control" name="date" required>
+                                            <div id="busDateError" class="text-danger small mt-1" style="display: none;"></div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-search"></i> Search Buses
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div id="busResults" class="mt-4"></div>
+                            </div>
+                            
+                            <!-- Package Search -->
+                            <div class="tab-pane fade" id="packages" role="tabpanel">
+                                <form action="/api/packages/search/" method="get">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Package Type</label>
+                                            <select class="form-select" name="type">
+                                                <option value="">All Types</option>
+                                                <option value="adventure">Adventure</option>
+                                                <option value="beach">Beach</option>
+                                                <option value="cultural">Cultural</option>
+                                                <option value="family">Family</option>
+                                                <option value="honeymoon">Honeymoon</option>
+                                                <option value="pilgrimage">Pilgrimage</option>
+                                                <option value="wildlife">Wildlife</option>
+                                                <option value="luxury">Luxury</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Duration (Days)</label>
+                                            <input type="number" class="form-control" name="duration" min="1" placeholder="e.g., 5">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-search"></i> Search Packages
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Hotels -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Featured Hotels</h2>
+        <div class="row">
+            {% for hotel in featured_hotels %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-shadow">
+                    {% if hotel.image %}
+                    <img src="{{ hotel.image.url }}" class="card-img-top" alt="{{ hotel.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary" style="height: 200px;"></div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ hotel.name }}</h5>
+                        <p class="card-text text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ hotel.city.name }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                {% for i in "12345"|slice:":hotel.star_rating" %}
+                                <i class="fas fa-star text-warning"></i>
+                                {% endfor %}
+                            </div>
+                            <div>
+                                <span class="badge bg-success">{{ hotel.review_rating }}/5</span>
+                            </div>
+                        </div>
+                        <a href="/api/hotels/{{ hotel.id }}/" class="btn btn-outline-primary btn-sm mt-3 w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Packages -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-4">Popular Holiday Packages</h2>
+        <div class="row">
+            {% for package in featured_packages %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-shadow">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            {% if package.image %}
+                            <img src="{{ package.image.url }}" class="img-fluid rounded-start h-100" alt="{{ package.name }}" style="object-fit: cover;">
+                            {% else %}
+                            <div class="bg-secondary h-100"></div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ package.name }}</h5>
+                                <p class="card-text">
+                                    <span class="badge bg-info">{{ package.duration_days }}D/{{ package.duration_nights }}N</span>
+                                    <span class="badge bg-primary ms-2">{{ package.get_package_type_display }}</span>
+                                </p>
+                                <p class="card-text text-muted">{{ package.description|truncatewords:15 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h5 mb-0 text-success">₹{{ package.starting_price }}</span>
+                                    <a href="/api/packages/{{ package.id }}/" class="btn btn-primary btn-sm">Book Now</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Choose GoExplorer?</h2>
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <div class="feature-box">
+                    <i class="fas fa-dollar-sign fa-3x text-primary mb-3"></i>
+                    <h5>Best Prices</h5>
+                    <p>Competitive prices with exclusive deals</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-box">
+                    <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                    <h5>Secure Booking</h5>
+                    <p>Safe and secure payment gateway</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-box">
+                    <i class="fas fa-headset fa-3x text-info mb-3"></i>
+                    <h5>24/7 Support</h5>
+                    <p>Round-the-clock customer support</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-box">
+                    <i class="fas fa-mobile-alt fa-3x text-warning mb-3"></i>
+                    <h5>Easy Booking</h5>
+                    <p>Book on the go with our mobile app</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Partner Registration Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Grow Your Business With GoExplorer</h2>
+        <div class="row g-4">
+            <!-- Property Owner Registration -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow border-0 partner-card" style="border-top: 4px solid #FF6B35;">
+                    <div class="card-body p-4">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: #FF6B35;">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <h4 class="card-title mb-3">List Your Property</h4>
+                        <p class="card-text text-muted mb-3">
+                            Own a homestay, resort, or villa? List your property on GoExplorer and reach millions of travelers. Easy setup, secure payments, and 24/7 support.
+                        </p>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Free listing for property owners</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Secure payment processing</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Reach travelers across India</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Built-in booking management</li>
+                        </ul>
+                        <a href="{% url 'property_owners:register' %}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-user-plus"></i> Register as Property Owner
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bus Operator Registration -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow border-0 partner-card" style="border-top: 4px solid #004E89;">
+                    <div class="card-body p-4">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: #004E89;">
+                            <i class="fas fa-bus"></i>
+                        </div>
+                        <h4 class="card-title mb-3">Operate Your Bus Service</h4>
+                        <p class="card-text text-muted mb-3">
+                            Run a bus service? Expand your reach with GoExplorer. List your routes, manage bookings, and get real-time insights into your business.
+                        </p>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>List unlimited buses & routes</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Real-time booking management</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Reach millions of travelers</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Easy payment settlements</li>
+                        </ul>
+                        <a href="{% url 'buses:operator_register' %}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-user-plus"></i> Register as Bus Operator
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <div class="alert alert-info border-0 rounded-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="fas fa-lightbulb fa-2x text-info"></i>
+                        </div>
+                        <div>
+                            <strong>Why Partner With Us?</strong>
+                            <p class="mb-0 mt-2">GoExplorer connects you with millions of travelers across India. Get verified within 24-48 hours, manage your inventory easily, receive secure payments, and grow your business with our dedicated support team.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.hover-shadow:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link {
+    color: #495057;
+    border-radius: 0.25rem;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #667eea;
+}
+
+.bus-card-home {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.bus-card-home:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.bus-operator-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.bus-timing {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.bus-price-home {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #FF6B35;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 2rem;
+}
+
+.loading-spinner .spinner-border {
+    color: #667eea;
+}
+
+.no-results {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-size: 1.1rem;
+}
+</style>
+
+<script>
+// Hotel Search Validation
+function validateHotelSearch(event) {
+    event.preventDefault();
+    
+    const city = document.getElementById('hotelCity').value;
+    const checkin = document.getElementById('hotelCheckin').value;
+    const checkout = document.getElementById('hotelCheckout').value;
+    
+    let isValid = true;
+    
+    // Clear previous errors
+    document.querySelectorAll('.text-danger').forEach(el => el.style.display = 'none');
+    
+    // Validate city
+    if (!city) {
+        document.getElementById('hotelCityError').textContent = 'Please select a city';
+        document.getElementById('hotelCityError').style.display = 'block';
+        isValid = false;
+    }
+    
+    // Validate check-in
+    if (!checkin) {
+        document.getElementById('hotelCheckinError').textContent = 'Please select check-in date';
+        document.getElementById('hotelCheckinError').style.display = 'block';
+        isValid = false;
+    } else {
+        const checkinDate = new Date(checkin);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (checkinDate < today) {
+            document.getElementById('hotelCheckinError').textContent = 'Check-in date cannot be in the past';
+            document.getElementById('hotelCheckinError').style.display = 'block';
+            isValid = false;
+        }
+    }
+    
+    // Validate check-out
+    if (!checkout) {
+        document.getElementById('hotelCheckoutError').textContent = 'Please select check-out date';
+        document.getElementById('hotelCheckoutError').style.display = 'block';
+        isValid = false;
+    } else if (checkin && checkout) {
+        const checkinDate = new Date(checkin);
+        const checkoutDate = new Date(checkout);
+        
+        if (checkoutDate <= checkinDate) {
+            document.getElementById('hotelCheckoutError').textContent = 'Check-out must be after check-in';
+            document.getElementById('hotelCheckoutError').style.display = 'block';
+            isValid = false;
+        }
+    }
+    
+    if (isValid) {
+        const params = new URLSearchParams({
+            city_id: city,
+            checkin,
+            checkout
+        });
+        window.location.href = `/hotels/?${params.toString()}`;
+    }
+    
+    return false;
+}
+
+// Bus Search with Validation
+async function searchBuses(event) {
+    event.preventDefault();
+    
+    const source = document.getElementById('busSource').value;
+    const destination = document.getElementById('busDestination').value;
+    const date = document.getElementById('busDate').value;
+    
+    let isValid = true;
+    
+    // Clear previous errors
+    document.querySelectorAll('.text-danger').forEach(el => el.style.display = 'none');
+    
+    // Validate source
+    if (!source) {
+        document.getElementById('busSourceError').textContent = 'Please select departure city';
+        document.getElementById('busSourceError').style.display = 'block';
+        isValid = false;
+    }
+    
+    // Validate destination
+    if (!destination) {
+        document.getElementById('busDestError').textContent = 'Please select destination city';
+        document.getElementById('busDestError').style.display = 'block';
+        isValid = false;
+    }
+    
+    // Validate same city
+    if (source && destination && source === destination) {
+        document.getElementById('busDestError').textContent = 'Destination must be different from departure city';
+        document.getElementById('busDestError').style.display = 'block';
+        isValid = false;
+    }
+    
+    // Validate date
+    if (!date) {
+        document.getElementById('busDateError').textContent = 'Please select journey date';
+        document.getElementById('busDateError').style.display = 'block';
+        isValid = false;
+    } else {
+        const journeyDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (journeyDate < today) {
+            document.getElementById('busDateError').textContent = 'Journey date cannot be in the past';
+            document.getElementById('busDateError').style.display = 'block';
+            isValid = false;
+        }
+    }
+    
+    if (!isValid) {
+        return false;
+    }
+    
+    // If valid, search buses
+    const resultsDiv = document.getElementById('busResults');
+    resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div><p>Searching buses...</p></div>';
+    
+    try {
+        const response = await fetch(`/api/buses/search/?source=${source}&destination=${destination}&date=${date}`);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+            let html = `<h4 class="mb-3">Found ${data.results.length} bus(es)</h4>`;
+            
+            data.results.forEach(bus => {
+                const routeParam = bus.route_id ? `route_id=${bus.route_id}` : '';
+                const dateParam = date ? `travel_date=${date}` : '';
+                const joiner = routeParam && dateParam ? '&' : '';
+                const query = routeParam || dateParam ? `?${routeParam}${joiner}${dateParam}` : '';
+
+                html += `
+                    <div class="bus-card-home">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="bus-operator-name">${bus.operator || 'Bus Operator'}</div>
+                                <p class="text-muted small mb-2">Bus: ${bus.bus_number || 'N/A'}</p>
+                                
+                                <div class="bus-timing">
+                                    <div>
+                                        <strong>${bus.departure_time || '--:--'}</strong>
+                                        <p class="text-muted small">Departure</p>
+                                    </div>
+                                    <div style="flex: 1; text-align: center;">
+                                        <i class="fas fa-arrow-right"></i>
+                                        <p class="text-muted small">${bus.duration_hours || '--'} hrs</p>
+                                    </div>
+                                    <div>
+                                        <strong>${bus.arrival_time || '--:--'}</strong>
+                                        <p class="text-muted small">Arrival</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <div class="bus-price-home">₹${bus.base_fare || 'N/A'}</div>
+                                <p class="text-muted small">Per Seat</p>
+                                <a href="/buses/${bus.id}/${query}" class="btn btn-sm btn-primary mt-2">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        } else {
+            resultsDiv.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No buses found for this route</p></div>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = '<div class="alert alert-danger">Error searching buses. Please try again.</div>';
+    }
+    
+    return false;
+}
+
+// Set minimum date to today for all date inputs
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+    const dateInputs = ['hotelCheckin', 'hotelCheckout', 'busDate'];
+
+    const openPicker = (input) => {
+        if (input && typeof input.showPicker === 'function') {
+            input.showPicker();
+        }
+    };
+
+    dateInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.min = todayStr;
+
+            // Pre-populate hotel dates for quick search
+            if (!input.value) {
+                if (id === 'hotelCheckin') input.value = todayStr;
+                if (id === 'hotelCheckout') input.value = tomorrowStr;
+                if (id === 'busDate') input.value = todayStr;
+            }
+
+            // Make entire input area open the picker
+            input.addEventListener('focus', () => openPicker(input));
+            input.addEventListener('click', () => openPicker(input));
+        }
+    });
+});
+</script>
+{% endblock %}

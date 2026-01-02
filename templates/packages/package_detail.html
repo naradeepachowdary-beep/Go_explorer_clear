@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ package.title }} - GoExplorer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .package-header {
+        background: linear-gradient(135deg, #FF6B35, #004E89);
+        color: white;
+        padding: 2rem 0;
+    }
+
+    .hero-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .itinerary-day {
+        background: white;
+        border-left: 4px solid #FF6B35;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+    }
+
+    .day-header {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #004E89;
+        margin-bottom: 0.5rem;
+    }
+
+    .day-title {
+        color: #FF6B35;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .inclusion-badge {
+        display: inline-block;
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        margin: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .booking-widget {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 2rem;
+        position: sticky;
+        top: 100px;
+    }
+
+    .highlights-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .highlights-list li {
+        padding: 0.5rem 0;
+        color: #555;
+    }
+
+    .highlights-list i {
+        color: #4caf50;
+        margin-right: 0.5rem;
+    }
+
+    .departure-option {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .departure-option:hover {
+        border-color: #FF6B35;
+        background: #fff3e0;
+    }
+
+    .departure-option input[type="radio"]:checked + label {
+        color: #FF6B35;
+        font-weight: 600;
+    }
+
+    .price-display {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #FF6B35;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Package Header -->
+<div class="package-header">
+    <div class="container">
+        <a href="/packages/" class="text-white-50 text-decoration-none">
+            <i class="fas fa-chevron-left"></i> Back to Packages
+        </a>
+        <h1 class="mt-2 mb-0">{{ package.name }}</h1>
+        <p class="mt-2 mb-0"><i class="fas fa-calendar"></i> {{ package.duration_days }} Days</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Hero Image -->
+            {% if package.image %}
+                <img src="{{ package.image.url }}" alt="{{ package.name }}" class="hero-image">
+            {% endif %}
+
+            <!-- Overview -->
+            <div class="info-card">
+                <h4 class="mb-3">Overview</h4>
+                <p>{{ package.description }}</p>
+                <div class="mt-3">
+                    <strong>What's Included:</strong>
+                    <div class="mt-2">
+                        {% if package.includes_accommodation %}<span class="inclusion-badge"><i class="fas fa-bed"></i> Accommodation</span>{% endif %}
+                        {% if package.includes_meals %}<span class="inclusion-badge"><i class="fas fa-utensils"></i> Meals</span>{% endif %}
+                        {% if package.includes_transport %}<span class="inclusion-badge"><i class="fas fa-car"></i> Transport</span>{% endif %}
+                        {% if package.includes_sightseeing %}<span class="inclusion-badge"><i class="fas fa-camera"></i> Sightseeing</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Highlights -->
+            <div class="info-card">
+                <h4 class="mb-3">Package Highlights</h4>
+                <ul class="highlights-list">
+                    {% for highlight in highlights %}
+                        <li><i class="fas fa-star"></i> {{ highlight }}</li>
+                    {% empty %}
+                        <li><i class="fas fa-star"></i> Unforgettable travel experience</li>
+                        <li><i class="fas fa-star"></i> Expert guided tours</li>
+                        <li><i class="fas fa-star"></i> 24/7 travel support</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Itinerary -->
+            <div class="info-card">
+                <h4 class="mb-4">Itinerary</h4>
+                {% for day in package.itinerary.all %}
+                    <div class="itinerary-day">
+                        <div class="day-header">Day {{ day.day_number }}</div>
+                        <div class="day-title">{{ day.title }}</div>
+                        <p class="text-muted">{{ day.description }}</p>
+                        {% if day.activities %}
+                            <strong>Activities:</strong>
+                            <ul class="small mt-2">
+                                {% for activity in day.activities.split %}
+                                    <li>{{ activity }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <div class="itinerary-day">
+                        <div class="day-header">Day 1</div>
+                        <div class="day-title">Arrival & Welcome</div>
+                        <p class="text-muted">Arrival at the destination. Welcome briefing and accommodation check-in.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Terms & Conditions -->
+            <div class="info-card">
+                <h4 class="mb-3">Terms & Conditions</h4>
+                <ul class="small text-muted">
+                    <li>Cancellation allowed up to 7 days before departure</li>
+                    <li>Full refund for cancellations 7+ days before</li>
+                    <li>50% refund for cancellations 3-7 days before</li>
+                    <li>No refund for cancellations within 3 days</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Booking Widget -->
+        <div class="col-lg-4">
+            <div class="booking-widget">
+                <h4 class="mb-4">Book This Package</h4>
+                
+                <form id="bookingForm" method="post" action="{% url 'packages:book_package' package.id %}">
+                    {% csrf_token %}
+                    
+                    <div class="form-group mb-4">
+                        <label class="form-label">Select Departure</label>
+                        {% for departure in departures %}
+                            <div class="departure-option">
+                                <input type="radio" id="departure_{{ departure.id }}" name="departure_id" 
+                                       value="{{ departure.id }}" required>
+                                <label for="departure_{{ departure.id }}" class="mb-0">
+                                    {{ departure.departure_date|date:"D, M d, Y" }} 
+                                    <span class="small text-muted">{{ departure.available_slots }} spots left</span>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="num_travelers" class="form-label">Number of Travelers</label>
+                        <input type="number" id="num_travelers" name="num_travelers" 
+                               class="form-control" min="1" value="1" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="traveler_name" class="form-label">Lead Traveler Name</label>
+                        <input type="text" id="traveler_name" name="traveler_name" 
+                               class="form-control" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="traveler_email" class="form-label">Email</label>
+                        <input type="email" id="traveler_email" name="traveler_email" 
+                               class="form-control" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="traveler_phone" class="form-label">Phone</label>
+                        <input type="tel" id="traveler_phone" name="traveler_phone" 
+                               class="form-control" required>
+                    </div>
+
+                    <div class="alert alert-info small">
+                        <div class="d-flex justify-content-between"><span>Base Price</span><span>₹<span id="basePrice">{{ package.starting_price|floatformat:"0" }}</span></span></div>
+                        <div class="d-flex justify-content-between"><span>GST (5%)</span><span>₹<span id="gstAmount">0</span></span></div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fw-bold"><span>Total</span><span class="price-display">₹<span id="totalPrice">{{ package.starting_price|floatformat:"0" }}</span></span></div>
+                        <div class="small text-muted mt-2">per traveler</div>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-check-circle"></i> Book Now
+                        </button>
+                    {% else %}
+                        <a href="/login/?next={{ request.path }}" class="btn btn-primary w-100">
+                            <i class="fas fa-sign-in-alt"></i> Login to Book
+                        </a>
+                    {% endif %}
+
+                    <p class="small text-muted text-center mt-3">You will receive a confirmation email immediately</p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const numTravelers = document.getElementById('num_travelers');
+        const basePriceEl = document.getElementById('basePrice');
+        const gstEl = document.getElementById('gstAmount');
+        const totalEl = document.getElementById('totalPrice');
+        const basePer = parseFloat('{{ package.starting_price }}') || 0;
+        const GST = 0.05; // 5%
+
+        const calc = () => {
+            const n = parseInt(numTravelers.value) || 1;
+            const base = basePer * n;
+            const gst = base * GST;
+            const total = base + gst;
+            basePriceEl.textContent = base.toFixed(0);
+            gstEl.textContent = gst.toFixed(0);
+            totalEl.textContent = total.toFixed(0);
+        };
+
+        numTravelers.addEventListener('change', calc);
+        calc();
+    });
+</script>
+{% endblock %}

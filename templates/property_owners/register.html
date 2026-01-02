@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Register as Property Owner - GoExplorer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registration-hero {
+        background: linear-gradient(135deg, #FF6B35, #004E89);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+    }
+
+    .registration-form {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+    }
+
+    .form-section h5 {
+        color: #004E89;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .benefits {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .benefit-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .benefit-item i {
+        color: #FF6B35;
+        margin-right: 1rem;
+        margin-top: 0.25rem;
+        font-size: 1.3rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Registration Hero -->
+<div class="registration-hero">
+    <div class="container">
+        <h1 class="mb-2">Grow Your Property Business</h1>
+        <p class="lead mb-0">Join GoExplorer and connect with thousands of travelers</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Benefits Column -->
+        <div class="col-lg-4">
+            <h3 class="mb-4">Why List Your Property?</h3>
+            <div class="benefits">
+                <div class="benefit-item">
+                    <i class="fas fa-globe"></i>
+                    <div>
+                        <strong>Reach Travelers</strong>
+                        <p class="small text-muted">Connect with millions of travelers across India</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <strong>Secure Payments</strong>
+                        <p class="small text-muted">Safe and secure payment processing</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <strong>Grow Revenue</strong>
+                        <p class="small text-muted">Increase bookings and maximize earnings</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-headset"></i>
+                    <div>
+                        <strong>Support 24/7</strong>
+                        <p class="small text-muted">Round-the-clock customer support</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-star"></i>
+                    <div>
+                        <strong>Build Reputation</strong>
+                        <p class="small text-muted">Get reviews and build your property's reputation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Column -->
+        <div class="col-lg-8">
+            <div class="registration-form">
+                <h3 class="mb-4">Register Your Property</h3>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Business Information -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-building"></i> Business Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_business_name" class="form-label">Property Name *</label>
+                                    {{ form.business_name }}
+                                    {% if form.business_name.errors %}
+                                        <div class="text-danger small mt-1">{{ form.business_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_property_type" class="form-label">Property Type *</label>
+                                    {{ form.property_type }}
+                                    {% if form.property_type.errors %}
+                                        <div class="text-danger small mt-1">{{ form.property_type.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Property Description *</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-user"></i> Your Details</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_owner_name" class="form-label">Full Name *</label>
+                                    {{ form.owner_name }}
+                                    {% if form.owner_name.errors %}
+                                        <div class="text-danger small mt-1">{{ form.owner_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_owner_phone" class="form-label">Phone Number *</label>
+                                    {{ form.owner_phone }}
+                                    {% if form.owner_phone.errors %}
+                                        <div class="text-danger small mt-1">{{ form.owner_phone.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_owner_email" class="form-label">Email Address *</label>
+                            {{ form.owner_email }}
+                            {% if form.owner_email.errors %}
+                                <div class="text-danger small mt-1">{{ form.owner_email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-map-marker-alt"></i> Property Location</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_city" class="form-label">City *</label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                        <div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_pincode" class="form-label">Pincode *</label>
+                                    {{ form.pincode }}
+                                    {% if form.pincode.errors %}
+                                        <div class="text-danger small mt-1">{{ form.pincode.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_address" class="form-label">Full Address *</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Legal & Tax -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-file-contract"></i> Legal & Tax Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_gst_number" class="form-label">GST Number</label>
+                                    {{ form.gst_number }}
+                                    <small class="text-muted">Optional</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_pan_number" class="form-label">PAN Number</label>
+                                    {{ form.pan_number }}
+                                    <small class="text-muted">Optional</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_business_license" class="form-label">Business License</label>
+                            {{ form.business_license }}
+                            <small class="text-muted">Optional</small>
+                        </div>
+                    </div>
+
+                    <!-- Bank Details -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-university"></i> Bank Details</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_bank_account_name" class="form-label">Account Holder Name</label>
+                                    {{ form.bank_account_name }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_bank_account_number" class="form-label">Account Number</label>
+                                    {{ form.bank_account_number }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_bank_ifsc" class="form-label">IFSC Code</label>
+                            {{ form.bank_ifsc }}
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> Your account will be verified by our team within 24-48 hours. You'll receive an email confirmation once your property is approved.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-check-circle"></i> Register as Property Owner
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Property Owner Dashboard - GoExplorer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #FF6B35, #004E89);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card h3 {
+        color: #FF6B35;
+        font-size: 2rem;
+        margin: 1rem 0 0.5rem 0;
+    }
+
+    .stat-card p {
+        color: #666;
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        color: #004E89;
+    }
+
+    .verification-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .verification-badge.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .verification-badge.verified {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .verification-badge.rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .property-card {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .property-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .property-image {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+    }
+
+    .property-content {
+        padding: 1.5rem;
+    }
+
+    .property-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #004E89;
+        margin-bottom: 0.5rem;
+    }
+
+    .property-type {
+        display: inline-block;
+        background: #e7f3ff;
+        color: #004E89;
+        padding: 0.3rem 0.8rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .property-stats {
+        display: flex;
+        justify-content: space-around;
+        padding: 1rem 0;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+        margin: 1rem 0;
+    }
+
+    .property-stat {
+        text-align: center;
+    }
+
+    .property-stat strong {
+        display: block;
+        color: #FF6B35;
+        font-size: 1.3rem;
+    }
+
+    .property-stat small {
+        display: block;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+
+    .property-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+
+    .property-actions a, .property-actions button {
+        flex: 1;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h4 {
+        color: #666;
+        margin-bottom: 1rem;
+    }
+
+    .alert-info {
+        border-left: 4px solid #FF6B35;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">Welcome, {{ user.first_name }}!</h1>
+                <p class="lead mb-0">Manage your properties and track bookings</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="verification-badge {{ property_owner.verification_status|default:'pending' }}">
+                    {% if property_owner.verification_status == 'verified' %}
+                        <i class="fas fa-check-circle"></i> Verified
+                    {% elif property_owner.verification_status == 'pending' %}
+                        <i class="fas fa-hourglass-half"></i> Pending Verification
+                    {% else %}
+                        <i class="fas fa-times-circle"></i> Verification Rejected
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Verification Info Alert -->
+    {% if property_owner.verification_status == 'pending' %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong><i class="fas fa-info-circle"></i> Under Verification</strong>
+        <p class="mb-0">Your account is being verified by our team. This usually takes 24-48 hours. You can continue to add properties, but they won't be visible to travelers until your account is verified.</p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% elif property_owner.verification_status == 'rejected' %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong><i class="fas fa-exclamation-circle"></i> Verification Rejected</strong>
+        <p class="mb-0">Unfortunately, your verification was rejected. Please <a href="#support">contact support</a> for more information on how to proceed.</p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- Stats Section -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-home stat-icon"></i>
+                <h3>{{ properties_count }}</h3>
+                <p>Properties Listed</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-calendar-check stat-icon"></i>
+                <h3>{{ total_bookings }}</h3>
+                <p>Total Bookings</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-star stat-icon"></i>
+                <h3>{{ average_rating|default:"0" }}</h3>
+                <p>Average Rating</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-rupiah stat-icon"></i>
+                <h3>₹{{ total_earnings|default:"0" }}</h3>
+                <p>Total Earnings</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Properties Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2>Your Properties</h2>
+                {% if property_owner.verification_status == 'verified' %}
+                    <a href="{% url 'property_owners:add_property' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Property
+                    </a>
+                {% else %}
+                    <button class="btn btn-secondary" disabled title="Verify your account first">
+                        <i class="fas fa-plus"></i> Add New Property
+                    </button>
+                {% endif %}
+            </div>
+
+            {% if properties %}
+                <div class="row">
+                    {% for property in properties %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="property-card">
+                            <div class="property-image">
+                                <i class="fas fa-building" style="opacity: 0.5;"></i>
+                            </div>
+                            <div class="property-content">
+                                <div class="property-title">{{ property.name }}</div>
+                                <span class="property-type">{{ property.property_type }}</span>
+                                
+                                <div class="property-stats">
+                                    <div class="property-stat">
+                                        <strong>{{ property.total_bookings }}</strong>
+                                        <small>Bookings</small>
+                                    </div>
+                                    <div class="property-stat">
+                                        <strong>{{ property.avg_rating|default:"0" }}</strong>
+                                        <small>Rating</small>
+                                    </div>
+                                    <div class="property-stat">
+                                        <strong>{{ property.occupancy|default:"0" }}%</strong>
+                                        <small>Occupancy</small>
+                                    </div>
+                                </div>
+
+                                <p class="text-muted small mb-3">
+                                    <i class="fas fa-map-marker-alt"></i> {{ property.city.name }}
+                                </p>
+
+                                <div class="property-actions">
+                                    <a href="{% url 'property_owners:edit_property' property.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="{% url 'property_owners:property_bookings' property.id %}" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-calendar"></i> Bookings
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4>No Properties Listed Yet</h4>
+                    <p class="text-muted mb-3">Start listing your properties to attract travelers and boost your earnings.</p>
+                    {% if property_owner.verification_status == 'verified' %}
+                        <a href="{% url 'property_owners:add_property' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Your First Property
+                        </a>
+                    {% else %}
+                        <p class="text-muted small">Complete your account verification to start listing properties.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Bookings Section -->
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-3">Recent Bookings</h2>
+            {% if recent_bookings %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Property</th>
+                            <th>Guest Name</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in recent_bookings|slice:":5" %}
+                        <tr>
+                            <td><code>{{ booking.booking_id|truncatechars:12 }}</code></td>
+                            <td>{{ booking.property.name }}</td>
+                            <td>{{ booking.customer_name }}</td>
+                            <td>{{ booking.check_in|date:"d M Y" }}</td>
+                            <td>{{ booking.check_out|date:"d M Y" }}</td>
+                            <td><strong>₹{{ booking.total_amount }}</strong></td>
+                            <td>
+                                {% if booking.status == 'confirmed' %}
+                                    <span class="badge bg-success">Confirmed</span>
+                                {% elif booking.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif booking.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'property_owners:booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No bookings yet. Once you list your properties, bookings will appear here.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Account Settings Link -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <hr>
+            <p class="text-muted text-center">
+                <a href="{% url 'property_owners:account_settings' %}">Account Settings</a> |
+                <a href="#">Support</a> |
+                <a href="#">Documentation</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

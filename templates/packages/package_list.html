@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tour Packages - GoExplorer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #FF6B35, #004E89);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+    }
+
+    .search-form-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .package-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s;
+        cursor: pointer;
+        height: 100%;
+    }
+
+    .package-card:hover {
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .package-image {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+        background: linear-gradient(135deg, #FF6B35, #004E89);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .package-info {
+        padding: 1.5rem;
+    }
+
+    .destination-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #004E89;
+        margin-bottom: 0.5rem;
+    }
+
+    .duration {
+        color: #FF6B35;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .inclusions-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+    }
+
+    .inclusions-list li {
+        padding: 0.25rem 0;
+        color: #555;
+    }
+
+    .inclusions-list i {
+        color: #4caf50;
+        margin-right: 0.5rem;
+    }
+
+    .price-section {
+        border-top: 1px solid #ddd;
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+
+    .price-display {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #FF6B35;
+    }
+
+    .rating {
+        color: #FFD700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <h1 class="mb-4">Explore Tour Packages</h1>
+        <p class="lead mb-0">Discover amazing destinations with our curated tour packages</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Search Form -->
+    <div class="row mb-5">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="search-form-container">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="destination" class="form-label">Destination</label>
+                        <input type="text" class="form-control" id="destination" name="destination" 
+                               value="{{ search_destination }}" placeholder="Enter destination">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="min_price" class="form-label">Min Price (₹)</label>
+                        <input type="number" class="form-control" id="min_price" name="min_price" 
+                               value="{{ min_price }}" placeholder="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="max_price" class="form-label">Max Price (₹)</label>
+                        <input type="number" class="form-control" id="max_price" name="max_price" 
+                               value="{{ max_price }}" placeholder="999999">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Search Packages
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Packages Grid -->
+    <div class="row">
+        {% for package in packages %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="{% url 'packages:package_detail' package.id %}" class="text-decoration-none text-dark">
+                    <div class="package-card">
+                        {% if package.image %}
+                            <img src="{{ package.image.url }}" alt="{{ package.name }}" class="package-image">
+                        {% else %}
+                            <div class="package-image">
+                                <i class="fas fa-plane"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="package-info">
+                            <div class="destination-name">{{ package.name }}</div>
+                            <div class="duration">
+                                <i class="fas fa-calendar-days"></i> {{ package.duration_days }} Days
+                            </div>
+                            
+                            {% if package.description %}
+                                <p class="text-muted small">{{ package.description|truncatewords:15 }}</p>
+                            {% endif %}
+
+                            <ul class="inclusions-list">
+                                {% if package.includes_hotel %}
+                                    <li><i class="fas fa-check"></i> Accommodation</li>
+                                {% endif %}
+                                {% if package.includes_meals %}
+                                    <li><i class="fas fa-check"></i> Meals</li>
+                                {% endif %}
+                                {% if package.includes_transport %}
+                                    <li><i class="fas fa-check"></i> Transport</li>
+                                {% endif %}
+                                {% if package.includes_sightseeing %}
+                                    <li><i class="fas fa-check"></i> Sightseeing</li>
+                                {% endif %}
+                            </ul>
+
+                            <div class="price-section">
+                                <div class="price-display">₹{{ package.starting_price|floatformat:"0" }}</div>
+                                <small class="text-muted">per person</small>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <h5>No packages found</h5>
+                    <p>Try adjusting your search filters</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

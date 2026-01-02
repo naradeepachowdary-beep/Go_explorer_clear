@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Booking Invoice - GoExplorer{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/booking-styles.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .invoice-container {
+        max-width: 800px;
+        margin: 40px auto;
+    }
+
+    @media print {
+        body {
+            background: white;
+        }
+        .no-print {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12 text-center no-print">
+            <h1 style="color: #333; margin-bottom: 10px;">
+                <i class="fas fa-receipt"></i> Booking Confirmation
+            </h1>
+            <p style="color: #666;">Your booking has been confirmed. Please save this invoice for your records.</p>
+        </div>
+    </div>
+
+    <div class="invoice-container">
+        <div class="invoice-header">
+            <div class="invoice-title">GoExplorer</div>
+            <div style="font-size: 14px; color: #666; margin-top: 5px;">Booking Confirmation Receipt</div>
+        </div>
+
+        <!-- Booking Details -->
+        <div class="invoice-section">
+            <div class="invoice-section-title">Booking Details</div>
+            <div class="invoice-line">
+                <span>Booking ID</span>
+                <strong>#{{ booking.id|default:"BK-2024-001" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Booking Date</span>
+                <strong>{{ booking.created_at|date:"d M, Y" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Booking Status</span>
+                <strong style="color: #28a745;">✓ Confirmed</strong>
+            </div>
+        </div>
+
+        <!-- Travel Details -->
+        <div class="invoice-section">
+            <div class="invoice-section-title">Travel Information</div>
+            <div class="invoice-line">
+                <span>Travel Type</span>
+                <strong>{{ booking.travel_type|default:"Bus" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Route</span>
+                <strong>{{ booking.from_location|default:"Bangalore" }} → {{ booking.to_location|default:"Mumbai" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Travel Date</span>
+                <strong>{{ booking.travel_date|date:"d M, Y" }}</strong>
+            </div>
+            {% if booking.departure_time %}
+            <div class="invoice-line">
+                <span>Departure Time</span>
+                <strong>{{ booking.departure_time|time:"H:i" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Arrival Time</span>
+                <strong>{{ booking.arrival_time|time:"H:i" }}</strong>
+            </div>
+            {% endif %}
+            <div class="invoice-line">
+                <span>Number of Passengers</span>
+                <strong>{{ booking.passengers|default:"1" }}</strong>
+            </div>
+        </div>
+
+        <!-- Passenger Details -->
+        <div class="invoice-section">
+            <div class="invoice-section-title">Passenger Information</div>
+            <div class="invoice-line">
+                <span>Name</span>
+                <strong>{{ booking.passenger_name|default:"Customer" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Email</span>
+                <strong>{{ booking.passenger_email|default:"email@example.com" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Phone</span>
+                <strong>{{ booking.passenger_phone|default:"Not Provided" }}</strong>
+            </div>
+            {% if booking.seat_number %}
+            <div class="invoice-line">
+                <span>Seat Number</span>
+                <strong>{{ booking.seat_number }}</strong>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Price Breakdown -->
+        <div class="invoice-section">
+            <div class="invoice-section-title">Price Breakdown</div>
+            <div class="invoice-line">
+                <span>Base Fare ({{ booking.passengers|default:"1" }} × ₹{{ booking.base_fare_per_unit|default:"0" }})</span>
+                <strong>₹{{ booking.base_fare|default:"0" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>GST (18%)</span>
+                <strong>₹{{ booking.gst_amount|default:"0" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Convenience Fee</span>
+                <strong>₹{{ booking.convenience_fee|default:"0" }}</strong>
+            </div>
+            {% if booking.levy_amount %}
+            <div class="invoice-line">
+                <span>Processing Levy</span>
+                <strong>₹{{ booking.levy_amount }}</strong>
+            </div>
+            {% endif %}
+            <div class="invoice-line">
+                <span>Discount</span>
+                <strong style="color: #28a745;">-₹{{ booking.discount_amount|default:"0" }}</strong>
+            </div>
+            <div class="invoice-total">
+                <span>TOTAL AMOUNT</span>
+                <strong>₹{{ booking.total_amount|default:"0" }}</strong>
+            </div>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="invoice-section">
+            <div class="invoice-section-title">Payment Information</div>
+            <div class="invoice-line">
+                <span>Payment Method</span>
+                <strong>{{ booking.payment_method|default:"Credit Card" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Transaction ID</span>
+                <strong>{{ booking.transaction_id|default:"TXN-2024-001" }}</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Payment Status</span>
+                <strong style="color: #28a745;">✓ Successful</strong>
+            </div>
+            <div class="invoice-line">
+                <span>Payment Date</span>
+                <strong>{{ booking.payment_date|date:"d M, Y H:i" }}</strong>
+            </div>
+        </div>
+
+        <!-- Important Information -->
+        <div class="invoice-section">
+            <div class="invoice-section-title">Important Information</div>
+            <ul style="padding-left: 20px; color: #666; font-size: 13px; line-height: 1.8;">
+                <li>Please carry a valid ID proof and this confirmation for boarding.</li>
+                <li>Arrive at the boarding point 30 minutes before departure time.</li>
+                <li>This ticket is non-transferable and valid only for the specified date.</li>
+                <li>In case of cancellation, ₹{{ booking.total_amount|default:"0" }} will be refunded within 5-7 working days.</li>
+                <li>For assistance, contact us at support@goexplorer.com or +91-XXXXXXXXXX</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="invoice-footer">
+            <p style="margin: 10px 0; color: #666;">
+                Thank you for booking with GoExplorer!<br>
+                Safe travels and enjoy your journey.
+            </p>
+            <p style="margin: 10px 0; color: #999; font-size: 11px;">
+                GoExplorer Pvt. Ltd. | www.goexplorer.com | support@goexplorer.com
+            </p>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4 no-print">
+        <div class="col-12 text-center">
+            <button class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; margin-right: 10px;" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Invoice
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.href='/'">
+                <i class="fas fa-home"></i> Go to Home
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

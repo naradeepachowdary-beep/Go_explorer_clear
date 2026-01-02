@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Buses - GoExplorer{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/booking-styles.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .hero-search {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+    }
+
+    .search-form {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .bus-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .bus-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        transform: translateY(-4px);
+    }
+
+    .operator-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .operator-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #e8f4f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-weight: bold;
+        color: #004E89;
+    }
+
+    .bus-type-badge {
+        display: inline-block;
+        background: #FF6B35;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 0.5rem;
+    }
+
+    .timing-info {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+        margin: 1rem 0;
+    }
+
+    .timing-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 0.5rem 0;
+    }
+
+    .amenities {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+
+    .amenity-badge {
+        background: #e8f4f8;
+        color: #004E89;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+
+    .price-section {
+        background: #fff3e0;
+        padding: 1rem;
+        border-radius: 6px;
+        text-align: right;
+    }
+
+    .price-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .price-amount {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+
+    .rating {
+        color: #FFD700;
+        margin-right: 0.5rem;
+    }
+
+    .stops-section {
+        background: #f9f9f9;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .bus-price {
+        font-size: 24px;
+        font-weight: 700;
+        color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-search">
+    <div class="container">
+        <h1 class="mb-4"><i class="fas fa-bus"></i> Book Buses</h1>
+        <p class="lead mb-4">Comfortable journey across India</p>
+    </div>
+</div>
+
+<!-- Search Form -->
+<div class="container mb-5">
+    <div class="search-form">
+        <form method="get" action="." class="row g-3" id="bus-search-form">
+            <div class="col-md-3">
+                <label for="from-city" class="form-label">From</label>
+                <div class="autocomplete-wrapper">
+                    <input 
+                        type="text" 
+                        id="from-city" 
+                        name="source_city" 
+                        placeholder="Departure City"
+                        class="form-control"
+                        value="{{ request.GET.source_city|default:'' }}"
+                    >
+                    <div class="autocomplete-suggestions" id="from-suggestions"></div>
+                    <div class="validation-error" id="from-error" style="display:none; color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label for="to-city" class="form-label">To</label>
+                <div class="autocomplete-wrapper">
+                    <input 
+                        type="text" 
+                        id="to-city" 
+                        name="dest_city" 
+                        placeholder="Arrival City"
+                        class="form-control"
+                        value="{{ request.GET.dest_city|default:'' }}"
+                    >
+                    <div class="autocomplete-suggestions" id="to-suggestions"></div>
+                    <div class="validation-error" id="to-error" style="display:none; color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label for="travel-date" class="form-label">Travel Date</label>
+                <input type="date" id="travel-date" name="travel_date" class="form-control" 
+                       value="{{ request.GET.travel_date }}" min="{% now 'Y-m-d' %}">
+            </div>
+            <div class="col-md-3">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;" id="searchBtn">
+                    <i class="fas fa-search"></i> Search Buses
+                </button>
+            </div>
+        </form>
+        <div class="alert alert-warning mt-3" id="validationMessage" style="display:none;"></div>
+    </div>
+</div>
+
+<!-- Advanced Filters -->
+<div class="container mb-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="fas fa-filter"></i> Advanced Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" action="." class="row g-3" id="filters-form">
+                <!-- Keep search parameters -->
+                <input type="hidden" name="source" value="{{ selected_source|default:'' }}">
+                <input type="hidden" name="destination" value="{{ selected_destination|default:'' }}">
+                <input type="hidden" name="travel_date" value="{{ selected_date|default:'' }}">
+                
+                <div class="col-md-2">
+                    <label for="bus-type" class="form-label">Bus Type</label>
+                    <select id="bus-type" name="bus_type" class="form-select form-select-sm">
+                        <option value="">All Types</option>
+                        <option value="seater" {% if selected_bus_type == 'seater' %}selected{% endif %}>Seater</option>
+                        <option value="sleeper" {% if selected_bus_type == 'sleeper' %}selected{% endif %}>Sleeper</option>
+                        <option value="semi_sleeper" {% if selected_bus_type == 'semi_sleeper' %}selected{% endif %}>Semi-Sleeper</option>
+                        <option value="ac_seater" {% if selected_bus_type == 'ac_seater' %}selected{% endif %}>AC Seater</option>
+                        <option value="ac_sleeper" {% if selected_bus_type == 'ac_sleeper' %}selected{% endif %}>AC Sleeper</option>
+                        <option value="volvo" {% if selected_bus_type == 'volvo' %}selected{% endif %}>Volvo</option>
+                        <option value="luxury" {% if selected_bus_type == 'luxury' %}selected{% endif %}>Luxury</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="ac-filter" class="form-label">AC/Non-AC</label>
+                    <select id="ac-filter" name="ac" class="form-select form-select-sm">
+                        <option value="">All Buses</option>
+                        <option value="ac" {% if selected_ac == 'ac' %}selected{% endif %}>AC Only</option>
+                        <option value="non_ac" {% if selected_ac == 'non_ac' %}selected{% endif %}>Non-AC Only</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="bus-age-min" class="form-label">Bus Age (Min Years)</label>
+                    <input type="number" id="bus-age-min" name="bus_age_min" class="form-control form-control-sm" 
+                           value="{{ selected_bus_age_min|default:'' }}" min="0" max="20" placeholder="0">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="bus-age-max" class="form-label">Bus Age (Max Years)</label>
+                    <input type="number" id="bus-age-max" name="bus_age_max" class="form-control form-control-sm" 
+                           value="{{ selected_bus_age_max|default:'' }}" min="0" max="20" placeholder="20">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="departure-time" class="form-label">Departure Time</label>
+                    <select id="departure-time" name="departure_time" class="form-select form-select-sm">
+                        <option value="">All Times</option>
+                        <option value="early" {% if selected_departure_time == 'early' %}selected{% endif %}>Early (Before 12 PM)</option>
+                        <option value="late" {% if selected_departure_time == 'late' %}selected{% endif %}>Late (12 PM onwards)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="container mb-5">
+    {% if buses %}
+        <h2 class="mb-4">{{ buses|length }} Buses Available</h2>
+        {% for bus in buses %}
+            <div class="bus-card">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Operator Info -->
+                        <div class="operator-info">
+                            <div class="operator-logo">
+                                <i class="fas fa-bus"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ bus.operator.name }}</h5>
+                                <small class="text-muted">
+                                    <i class="fas fa-star rating"></i> {{ bus.operator.rating }}/5 rating
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Bus Type & Amenities -->
+                        <div>
+                            <span class="bus-type-badge">{{ bus.get_bus_type_display }}</span>
+                            {% if bus.has_ac %}<span class="amenity-badge"><i class="fas fa-snowflake"></i> AC</span>{% endif %}
+                            {% if bus.has_wifi %}<span class="amenity-badge"><i class="fas fa-wifi"></i> WiFi</span>{% endif %}
+                            {% if bus.has_charging_point %}<span class="amenity-badge"><i class="fas fa-plug"></i> Charging</span>{% endif %}
+                            {% if bus.has_blanket %}<span class="amenity-badge"><i class="fas fa-blanket"></i> Blanket</span>{% endif %}
+                        </div>
+
+                        <!-- Route Info -->
+                        {% with route=bus.selected_route %}
+                            {% if route %}
+                            <div class="timing-info">
+                                <div class="timing-row">
+                                    <div>
+                                        <strong>{{ route.departure_time|time:"H:i" }}</strong>
+                                        <div class="text-muted small">Departure</div>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-arrow-right" style="color: #999;"></i>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <strong>{{ route.arrival_time|time:"H:i" }}</strong>
+                                        <div class="text-muted small">Arrival</div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ route.duration_hours|floatformat:"1" }} hrs • {{ route.distance_km|floatformat:"0" }} km</small>
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+
+                    <div class="col-md-4 text-md-end">
+                        {% with route=bus.selected_route %}
+                        <div class="price-section">
+                            <div class="price-label">From</div>
+                            {% if route %}
+                                <div class="price-amount">₹{{ route.base_fare|floatformat:"0" }}</div>
+                            {% else %}
+                                <div class="price-amount">₹--</div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-2">{{ bus.total_seats }} seats available</small>
+                            {% if route %}
+                                <a href="{% url 'buses:bus_detail' bus.id %}?route_id={{ route.id }}{% if selected_date %}&travel_date={{ selected_date }}{% endif %}" class="btn btn-primary mt-3 w-100">
+                                    View & Book
+                                </a>
+                            {% else %}
+                                <a href="{% url 'buses:bus_detail' bus.id %}" class="btn btn-primary mt-3 w-100">View & Book</a>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% elif request.GET %}
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle"></i> No buses found for your search. Try different cities or date.
+        </div>
+    {% else %}
+        <div class="alert alert-secondary" role="alert">
+            <i class="fas fa-search"></i> Use the search form above to find buses.
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/booking-utilities.js' %}"></script>
+<script>
+    // Initialize autocomplete
+    document.addEventListener('DOMContentLoaded', function() {
+        const fromAutocomplete = new CityAutocomplete(
+            document.getElementById('from-city'),
+            document.getElementById('from-suggestions')
+        );
+
+        const toAutocomplete = new CityAutocomplete(
+            document.getElementById('to-city'),
+            document.getElementById('to-suggestions')
+        );
+
+        // Close suggestions on outside click
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.autocomplete-wrapper')) {
+                document.querySelectorAll('.autocomplete-suggestions').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+        });
+
+        // Real-time validation as user types
+        document.getElementById('from-city').addEventListener('change', validateOnChange);
+        document.getElementById('to-city').addEventListener('change', validateOnChange);
+
+        function validateOnChange() {
+            const fromCity = document.getElementById('from-city').value.trim();
+            const toCity = document.getElementById('to-city').value.trim();
+            
+            // Clear errors first
+            document.getElementById('from-error').style.display = 'none';
+            document.getElementById('to-error').style.display = 'none';
+
+            if (fromCity && toCity && fromCity.toLowerCase() === toCity.toLowerCase()) {
+                document.getElementById('to-error').textContent = '❌ Destination must be different from departure city';
+                document.getElementById('to-error').style.display = 'block';
+            }
+        }
+
+        // Validate form before submission
+        document.getElementById('bus-search-form').addEventListener('submit', function(e) {
+            const fromCity = document.getElementById('from-city').value.trim();
+            const toCity = document.getElementById('to-city').value.trim();
+            const travelDate = document.getElementById('travel-date').value;
+
+            // Clear previous errors
+            document.getElementById('from-error').style.display = 'none';
+            document.getElementById('to-error').style.display = 'none';
+            document.getElementById('validationMessage').style.display = 'none';
+
+            let hasError = false;
+
+            // Check if both cities are filled
+            if (!fromCity) {
+                document.getElementById('from-error').textContent = '⚠️ Please select departure city';
+                document.getElementById('from-error').style.display = 'block';
+                hasError = true;
+            }
+            if (!toCity) {
+                document.getElementById('to-error').textContent = '⚠️ Please select arrival city';
+                document.getElementById('to-error').style.display = 'block';
+                hasError = true;
+            }
+            if (!travelDate) {
+                document.getElementById('validationMessage').innerHTML = '⚠️ Please select a travel date';
+                document.getElementById('validationMessage').style.display = 'block';
+                hasError = true;
+            }
+
+            // Check if same city
+            if (fromCity && toCity && fromCity.toLowerCase() === toCity.toLowerCase()) {
+                document.getElementById('to-error').textContent = '❌ Destination must be different from departure city';
+                document.getElementById('to-error').style.display = 'block';
+                hasError = true;
+            }
+
+            // Check if date is not in past
+            if (travelDate) {
+                const selectedDate = new Date(travelDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (selectedDate < today) {
+                    document.getElementById('validationMessage').innerHTML = '❌ Travel date cannot be in the past';
+                    document.getElementById('validationMessage').style.display = 'block';
+                    hasError = true;
+                }
+            }
+
+            if (hasError) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Set min date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('travel-date').setAttribute('min', today);
+    });
+</script>
+{% endblock %}
