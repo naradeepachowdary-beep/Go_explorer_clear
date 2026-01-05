@@ -8,14 +8,10 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'goexplorer.settings')
-    import django
-    from django.apps import apps
-    # If Django isn't already configured (i.e., we're running inside manage.py),
-    # avoid calling django.setup() again which would raise a "populate() isn't reentrant" error.
-    if not apps.ready:
-        django.setup()
-
+    # Note: Do NOT call django.setup() here. This function is called either:
+    # 1. From seed_dev management command (Django already initialized)
+    # 2. From __main__ (see bottom of file) - which handles setup
+    
     from django.contrib.auth import get_user_model
     from bookings.models import Booking, BusBooking, BusBookingSeat
     from buses.models import BusSchedule, BusOperator, Bus, BusRoute, SeatLayout
@@ -320,4 +316,8 @@ def main():
 
 
 if __name__ == '__main__':
+    # Only set up Django when running as standalone script (not from manage.py or seed_dev)
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'goexplorer.settings')
+    import django
+    django.setup()
     main()
