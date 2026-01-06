@@ -10,6 +10,7 @@ from .models import Booking
 import razorpay
 from django.conf import settings
 import json
+from notifications.services import EmailService, WhatsAppService, SMSService
 
 
 class BookingListView(generics.ListAPIView):
@@ -118,6 +119,34 @@ def verify_payment(request):
             from hotels.channel_manager_service import finalize_booking_after_payment
             
             booking = finalize_booking_after_payment(booking, payment_reference=razorpay_payment_id)
+            
+            # Send booking confirmation notifications
+            try:
+                booking_data = {
+                    'booking_id': str(booking.booking_id),
+                    'booking_type': 'Hotel',
+                    'property_name': booking.hotel.name if booking.hotel else 'Hotel',
+                    'booking_date': f"{booking.check_in} to {booking.check_out}",
+                    'price': booking.total_cost,
+                    'status': 'Confirmed'
+                }
+                
+                # Send Email
+                EmailService.send_booking_confirmation(request.user, booking_data)
+                
+                # Send SMS (if phone available)
+                if request.user.phone:
+                    SMSService.send_booking_confirmation(request.user, booking_data)
+                
+                # Send WhatsApp (if integrated)
+                try:
+                    WhatsAppService.send_booking_confirmation(request.user, booking_data)
+                except:
+                    pass  # WhatsApp optional
+                    
+            except Exception as e:
+                print(f"Notification error: {e}")
+                pass  # Don't fail booking if notification fails
             
             return Response({
                 'status': 'success',
